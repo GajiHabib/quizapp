@@ -1,7 +1,11 @@
-// ignore_for_file: prefer_const_constructors, sort_child_properties_last
+
+
+// ignore_for_file: unused_import
 
 import 'package:flutter/material.dart';
+import 'package:quizapp/admin_panel/admin_panel.dart';
 import 'Quizscreen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class homescreen extends StatelessWidget {
   const homescreen({super.key});
@@ -31,7 +35,21 @@ class homescreen extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           shape: StadiumBorder()
           ),
-          )
+          ),
+      Padding(padding: EdgeInsets.all(50),
+      
+      child:  ElevatedButton(onPressed: (){
+          addDataToDB();
+      }, child: Text('database'),style: ElevatedButton.styleFrom(shape: StadiumBorder()),),
+
+
+  
+      ),
+      Padding(padding:EdgeInsets.all(26),
+      child: ElevatedButton(onPressed: (){
+        Navigator.push(context, MaterialPageRoute(builder: (context) =>admin_panel() ,));
+      }, child: Text('Admin panel'),style:ElevatedButton.styleFrom(shape: StadiumBorder()),),
+      )
       ],
       )
       ],
@@ -40,4 +58,17 @@ class homescreen extends StatelessWidget {
     );
   }
 }
+ Future<void>addDataToDB()async{
+  var collection = await  FirebaseFirestore.instance.collection('allquiz');
+    Map<String, dynamic> quizMap = {
+      'question': 'What is the capital of France?',
+      'answerList': [
+        {'answer': 'Berlin', 'isCorrect': false},
+        {'answer': 'London', 'isCorrect': false},
+        {'answer': 'Paris', 'isCorrect': true},
+        {'answer': 'Madrid', 'isCorrect': false},
+      ]
+    };
+       collection.add(quizMap);
 
+ }

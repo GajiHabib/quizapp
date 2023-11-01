@@ -1,4 +1,5 @@
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'Resultscreen.dart';
 import 'allQuiz.dart';
@@ -18,84 +19,129 @@ class _QuizscreenState extends State<Quizscreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const SizedBox(
-              height: 40,
-            ),
-            Text('${quizIndex + 1} / ${allQuiz.length}'),
-            Text(
-              allQuiz[quizIndex].question,
-              textScaleFactor: 1.2,
-            ),
-            const SizedBox(
-              height: 50,
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: allQuiz[quizIndex].answerList.length,
-                itemBuilder: (context, index) {
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        selectedAnswerIndex = index;
-                      });
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: FutureBuilder<List<Quiz>>(
+              future: getAllQuiz(),
+              builder: (context, snapshot) {
+                if(snapshot.connectionState==ConnectionState.done){
+                  if (snapshot.data!=[]){
+                    var allQuiz=snapshot.data!;
+                     return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(
+                  height: 40,
+                ),
+                Text('${quizIndex + 1} / ${allQuiz.length}'),
+                Text(
+                  allQuiz[quizIndex].question,
+                  textScaleFactor: 1.2,
+                ),
+                const SizedBox(
+                  height: 50,
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: allQuiz[quizIndex].answerList.length,
+                    itemBuilder: (context, index) {
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            selectedAnswerIndex = index;
+                          });
+                        },
+                        child: Card(
+                          color: index == selectedAnswerIndex
+                              ? selectedColor
+                              : Colors.blue,
+                          child: Padding(
+                            padding: const EdgeInsets.all(18),
+                            child: Center(
+                                child: Text(
+                                    allQuiz[quizIndex].
+                                    answerList[index].answer)),
+                          ),
+                        ),
+                      );
                     },
-                    child: Card(
-                      color: index == selectedAnswerIndex
-                          ? selectedColor
-                          : Colors.blue,
-                      child: Padding(
-                        padding: const EdgeInsets.all(18),
-                        child: Center(
-                            child: Text(
-                                allQuiz[quizIndex].
-                                answerList[index].answer)),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const Spacer(),
-            ElevatedButton(
-                onPressed: ()async {
-                  if (allQuiz[quizIndex]
-                          .answerList[selectedAnswerIndex!]
-                          .iscorrect ==
-                      true){
-                  score += 10;
-                  setState(() {
-                    selectedColor=Colors.green;
-                  });
-                      }else{
+                  ),
+                ),
+                const Spacer(),
+                ElevatedButton(
+                    onPressed: ()async {
+                      if (allQuiz[quizIndex]
+                              .answerList[selectedAnswerIndex!]
+                              .iscorrect ==
+                          true){
+                      score += 10;
+                      setState(() {
+                        selectedColor=Colors.green;
+                      });
+                          }else{
+                            setState(() {
+                              selectedColor=Colors.red;
+                            });
+                          }
+                          await Future.delayed(const Duration(seconds:2));
+                      if (quizIndex < allQuiz.length - 1) {
                         setState(() {
-                          selectedColor=Colors.red;
+                          quizIndex++;
+                          selectedColor=Colors.yellow;
+                          selectedAnswerIndex=null;
                         });
+                      }else{
+                        // ignore: use_build_context_synchronously
+                        Navigator.pushReplacement(context, 
+                        MaterialPageRoute(builder: (context) => Resultscreen
+                        (score: score)));
                       }
-                      await Future.delayed(const Duration(seconds:2));
-                  if (quizIndex < allQuiz.length - 1) {
-                    setState(() {
-                      quizIndex++;
-                      selectedColor=Colors.yellow;
-                      selectedAnswerIndex=null;
-                    });
+                    },
+                    child: Text('Next Quiz')),
+                    const SizedBox(height: 70,),
+                    ElevatedButton(onPressed: (){
+                    getAllQuiz();
+                    }, child: Text('Get Data'))
+              ],
+            );
+
                   }else{
-                    // ignore: use_build_context_synchronously
-                    Navigator.pushReplacement(context, 
-                    MaterialPageRoute(builder: (context) => Resultscreen
-                    (score: score),));
+                    return Center(child: Text('no Quiz'));
                   }
-                },
-                child: const Text('Submit')),
-                const SizedBox(height: 70,),
-          ],
+                }else{
+                  return Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+              },
+            ),
+         
+          ),
         ),
       ),
     );
   }
+
+  Future<List<Quiz>>getAllQuiz()async{
+    List <Quiz>quizList = [];
+    var collectionSnapshot=
+    await FirebaseFirestore.instance.collection('all_quiz').get();
+    for (var documentSnapshot in collectionSnapshot.docs){
+      String question= documentSnapshot.get('question');
+      List answerMapList = documentSnapshot.get('answerList');
+      List <Answer>answerList =[];
+      for (var answerMap in answerMapList){
+        Answer myAnswer = Answer(answer: answerMap['answer'], iscorrect: answerMap['iscorrect']);
+        answerList.add(myAnswer);
+      }
+      Quiz myQuiz =Quiz(question: question, answerList: answerList);
+      quizList.add(myQuiz);
+    }
+    return quizList;
+  }
+
 }
