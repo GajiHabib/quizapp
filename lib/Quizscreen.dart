@@ -1,6 +1,7 @@
 
-import 'package:cloud_firestore/cloud_firestore.dart';
+// ignore_for_file: unused_local_variabl
 import 'package:flutter/material.dart';
+import 'package:quizapp/helpers.dart';
 import 'Resultscreen.dart';
 import 'allQuiz.dart';
 
@@ -24,7 +25,7 @@ class _QuizscreenState extends State<Quizscreen> {
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: FutureBuilder<List<Quiz>>(
-              future: getAllQuiz(),
+              future:Helpers. getAllQuiz(),
               builder: (context, snapshot) {
                 if(snapshot.connectionState==ConnectionState.done){
                   if (snapshot.data!=[]){
@@ -103,9 +104,7 @@ class _QuizscreenState extends State<Quizscreen> {
                     },
                     child: Text('Next Quiz')),
                     const SizedBox(height: 70,),
-                    ElevatedButton(onPressed: (){
-                    getAllQuiz();
-                    }, child: Text('Get Data'))
+                  
               ],
             );
 
@@ -124,24 +123,6 @@ class _QuizscreenState extends State<Quizscreen> {
         ),
       ),
     );
-  }
-
-  Future<List<Quiz>>getAllQuiz()async{
-    List <Quiz>quizList = [];
-    var collectionSnapshot=
-    await FirebaseFirestore.instance.collection('all_quiz').get();
-    for (var documentSnapshot in collectionSnapshot.docs){
-      String question= documentSnapshot.get('question');
-      List answerMapList = documentSnapshot.get('answerList');
-      List <Answer>answerList =[];
-      for (var answerMap in answerMapList){
-        Answer myAnswer = Answer(answer: answerMap['answer'], iscorrect: answerMap['iscorrect']);
-        answerList.add(myAnswer);
-      }
-      Quiz myQuiz =Quiz(question: question, answerList: answerList);
-      quizList.add(myQuiz);
-    }
-    return quizList;
   }
 
 }

@@ -35,12 +35,7 @@ class _addquizbottomsheetwidgetState extends State<addquizbottomsheetwidget> {
       height: deviceHeight * 0.8,
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color.fromARGB(
-          88,
-          654,
-          765,
-          76,
-        ),
+        color: Color.fromARGB(223, 29, 29, 223),
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(16),
           topRight: Radius.circular(16),
